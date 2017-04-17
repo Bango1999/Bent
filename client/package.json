@@ -18,10 +18,12 @@
   "license": "CC0-1.0",
   "dependencies": {
     "electron": "^1.6.2",
+    "keydrown": "^1.2.3",
     "three": "^0.84.0"
   },
   "devDependencies": {
     "electron": "^1.6.2",
+    "keydrown": "^1.2.3",
     "three": "^0.84.0"
   }
 }

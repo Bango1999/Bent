@@ -1,41 +1,67 @@
 (function() {
-  var screen = document.getElementById("screen");
+  var container = document.getElementById('container');
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
-  var map = new Array();
-  for(x = 0;x < 200;x++)
+  var renderer = new THREE.WebGLRenderer();
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  container.appendChild( renderer.domElement );
+
+  function createCube(x, y, z, w, h, d)
   {
-    map[x] = new Array();
+    var geometry = new THREE.BoxGeometry(w, h, d);
+    var material = new THREE.MeshBasicMaterial( { color: 0xe67e22 } );
+    var cube = new THREE.Mesh( geometry, material );
+    cube.position.x = x;
+    cube.position.y = y;
+    cube.position.z = z;
+    scene.add( cube );
+  }
 
-    for(y = 0;y < 200;y++)
+  for(x = 0;x < 10;x++)
+  {
+    for(z = 0;z < 10;z++)
     {
-      map[x][y] = "0";
+      createCube(x, 0, z, 1, 1, 1);
     }
   }
 
-  ctx = screen.getContext('2d');
-  ctx.fillStyle = "#000";
+  var kd = require('keydrown');
 
-  width = window.innerWidth
-  height = window.innerHeight;
-
-  screen.width = width;
-  screen.height = height;
-
-  size = {};
-  size.w = 100 / width;
-  size.h = 100 / height;
-
-  for(x = 0;x < 100;x++)
+  kd.W.down(function()
   {
-    for(y = 0;y < 100;y++)
-    {
+    camera.position.z = camera.position.z - 0.1;
+  });
+  kd.A.down(function()
+  {
+    camera.position.x = camera.position.x - 0.1;
+  });
+  kd.S.down(function()
+  {
+    camera.position.z = camera.position.z + 0.1;
+  });
+  kd.D.down(function()
+  {
+    camera.position.x = camera.position.x + 0.1;
+  });
+  kd.SPACE.down(function()
+  {
 
-    }
+  });
+  kd.run(function()
+  {
+    kd.tick();
+  });
+
+  camera.position.z = 20;
+  camera.position.y = 2;
+
+  function render()
+  {
+  	requestAnimationFrame( render );
+
+  	renderer.render( scene, camera );
   }
 
-  console.log('done');
-
-  // get the canvas DOM element and the 2D drawing context
-  var canvas = document.getElementById('screen');
-
+  render();
 })();
