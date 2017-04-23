@@ -23,61 +23,59 @@
   }
 
   //head
-  createCube(0, 1.8, 0, 0.4, 0.4, 0.4, 0x1abc9c);
+  createCube(0, 18, 0, 4, 4, 4, 0x1abc9c);
   //arms
-  createCube(-0.3, 1.2, 0, 0.2, 0.8, 0.2, 0x3498db);
-  createCube(0.3, 1.2, 0, 0.2, 0.8, 0.2, 0x9b59b6);
+  createCube(-3, 12, 0, 2, 8, 2, 0x3498db);
+  createCube(3, 12, 0, 2, 8, 2, 0x9b59b6);
   //torso
-  createCube(0, 1.2, 0, 0.4, 0.8, 0.2, 0x34495e);
+  createCube(0, 12, 0, 4, 8, 2, 0x34495e);
   //legs
-  createCube(-0.1, 0.4, 0, 0.2, 0.8, 0.2, 0xe74c3c);
-  createCube(0.1, 0.4, 0, 0.2, 0.8, 0.2, 0xe67e22);
+  createCube(-1, 4, 0, 2, 8, 2, 0xe74c3c);
+  createCube(1, 4, 0, 2, 8, 2, 0xe67e22);
 
   //comparision cubes
-  createCube(0, 0, 0, 1, 0, 1, 0xf1c40f);
-  createCube(1, 0, 0, 1, 0, 1, 0xef0123);
-  createCube(1, 1, 0, 1, 0, 1, 0xef0123);
-  createCube(1, 2, 0, 1, 0, 1, 0xef0123);
+  createCube(0, 0, 0, 10, 0, 10, 0xf1c40f);
+  createCube(10, 0, 0, 10, 0, 10, 0xef0123);
+  createCube(10, 10, 0, 10, 0, 10, 0xef0123);
+  createCube(10, 20, 0, 10, 0, 10, 0xef0123);
 
-  camera.position.z = 2.25;
-  camera.position.y = 2.5;
+  camera.position.z = 22.5;
+  camera.position.y = 25;
   camera.rotation.x = -0.25;
 
   var kd = require('keydrown');
 
-  console.log(camera);
-
   kd.Q.down(function()
   {
-    camera.rotation.y = camera.rotation.y + 0.05;
+    camera.rotation.y = camera.rotation.y + 0.5;
   });
   kd.E.down(function()
   {
-    camera.rotation.y = camera.rotation.y - 0.05;
+    camera.rotation.y = camera.rotation.y - 0.5;
   });
   kd.W.down(function()
   {
-    camera.position.z = camera.position.z - 0.1;
+    camera.position.z = camera.position.z - 1;
   });
   kd.A.down(function()
   {
-    camera.position.x = camera.position.x - 0.1;
+    camera.position.x = camera.position.x - 1;
   });
   kd.S.down(function()
   {
-    camera.position.z = camera.position.z + 0.1;
+    camera.position.z = camera.position.z + 1;
   });
   kd.D.down(function()
   {
-    camera.position.x = camera.position.x + 0.1;
+    camera.position.x = camera.position.x + 1;
   });
   kd.SPACE.down(function()
   {
-    camera.position.y = camera.position.y + 0.1;
+    camera.position.y = camera.position.y + 1;
   });
   kd.SHIFT.down(function()
   {
-    camera.position.y = camera.position.y - 0.1;
+    camera.position.y = camera.position.y - 1;
   });
   kd.run(function()
   {
@@ -98,6 +96,9 @@
 
       renderer.setSize(width, height);
     }
+
+    scene.children[1].rotation.x = 1;
+    scene.children[2].rotation.x = 1;
 
   	requestAnimationFrame(render);
 
