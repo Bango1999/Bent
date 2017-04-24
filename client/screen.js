@@ -24,11 +24,14 @@
 
   //head
   createCube(0, 18, 0, 4, 4, 4, 0x1abc9c);
+
   //arms
   createCube(-3, 12, 0, 2, 8, 2, 0x3498db);
   createCube(3, 12, 0, 2, 8, 2, 0x9b59b6);
+
   //torso
   createCube(0, 12, 0, 4, 8, 2, 0x34495e);
+
   //legs
   createCube(-1, 4, 0, 2, 8, 2, 0xe74c3c);
   createCube(1, 4, 0, 2, 8, 2, 0xe67e22);
@@ -47,35 +50,65 @@
 
   kd.Q.down(function()
   {
-    camera.rotation.y = camera.rotation.y + 0.5;
+    camera.rotation.y = camera.rotation.y + 0.025;
   });
   kd.E.down(function()
   {
-    camera.rotation.y = camera.rotation.y - 0.5;
+    camera.rotation.y = camera.rotation.y - 0.025;
   });
   kd.W.down(function()
   {
-    camera.position.z = camera.position.z - 1;
+    camera.position.z -= 1;
+
+    for(z=0;z<6;z++)
+    {
+      scene.children[z].position.z -= 1;
+    }
   });
   kd.A.down(function()
   {
-    camera.position.x = camera.position.x - 1;
+    camera.position.x -= 1;
+
+    for(z=0;z<6;z++)
+    {
+      scene.children[z].position.x -= 1;
+    }
   });
   kd.S.down(function()
   {
-    camera.position.z = camera.position.z + 1;
+    camera.position.z += 1;
+
+    for(z=0;z<6;z++)
+    {
+      scene.children[z].position.z += 1;
+    }
   });
   kd.D.down(function()
   {
-    camera.position.x = camera.position.x + 1;
+    camera.position.x += 1;
+
+    for(z=0;z<6;z++)
+    {
+      scene.children[z].position.x += 1;
+    }
   });
   kd.SPACE.down(function()
   {
-    camera.position.y = camera.position.y + 1;
+    camera.position.y += 1;
+
+    for(z=0;z<6;z++)
+    {
+      scene.children[z].position.y += 1;
+    }
   });
   kd.SHIFT.down(function()
   {
-    camera.position.y = camera.position.y - 1;
+    camera.position.y -= 1;
+
+    for(z=0;z<6;z++)
+    {
+      scene.children[z].position.y -= 1;
+    }
   });
   kd.run(function()
   {
@@ -84,7 +117,7 @@
 
   console.log(scene);
 
-  function render()
+  function updateScreen()
   {
     if(width != window.innerWidth || height != window.innerHeight)
     {
@@ -96,9 +129,11 @@
 
       renderer.setSize(width, height);
     }
+  }
 
-    scene.children[1].rotation.x = 1;
-    scene.children[2].rotation.x = 1;
+  function render()
+  {
+    updateScreen();
 
   	requestAnimationFrame(render);
 
