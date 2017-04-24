@@ -10,9 +10,13 @@
 
   //ratio = 4 : 3;
 
+  var scale = {};
+  scale.x = 200;
+  scale.y = 150;
+
   var unit = {};
-  unit.x = width / 200;
-  unit.y = height / 150;
+  unit.x = width / scale.x;
+  unit.y = height / scale.y;
 
   window.addEventListener('resize', function()
   {
@@ -25,8 +29,8 @@
     container.height = height;
 
     //update
-    unit.x = width / 200;
-    unit.y = height / 150;
+    unit.x = width / scale.x;
+    unit.y = height / scale.y;
   });
 
   //character
@@ -36,7 +40,7 @@
   character.position.x = 10;
   character.position.y = 10;
   character.position.w = 5;
-  character.position.h = 10;
+  character.position.h = 5;
 
   //map
 
@@ -61,14 +65,7 @@
       y:5,
       w:5,
       h:65
-    },
-    {
-      item:'wall',
-      x:95,
-      y:5,
-      w:5,
-      h:65
-    },
+    }
   ];
 
   //movement
@@ -132,13 +129,27 @@
 
     for(i in map)
     {
-      ctx.rect(
-        (width / 2) - (character.position.w / 2) - (unit.x * character.position.x) + (unit.x * map[i].x) + 0.5,
-        (height / 2) - (character.position.h / 2) - (unit.y * character.position.y) + (unit.y * map[i].y) + 0.5,
-        (unit.x * map[i].w),
-        (unit.y * map[i].h)
-      );
-      ctx.stroke();
+      //canvas
+      cx = 0;
+      cy = 0;
+      cw = width;
+      ch = height;
+
+      //map item
+      dx = (width / 2) - (character.position.w / 2) - (unit.x * character.position.x) + (unit.x * map[i].x) + 0.5;
+      dy = (height / 2) - (character.position.h / 2) - (unit.y * character.position.y) + (unit.y * map[i].y) + 0.5;
+      dw = (unit.x * map[i].w);
+      dh = (unit.y * map[i].h);
+
+      //if map item is inside canvas, render it
+      if (cx < dx + dw &&
+          cx + cw > dx &&
+          cy < dy + dh &&
+          cy + ch > dy)
+      {
+        ctx.fillRect(dx, dy, dw, dh);
+        ctx.stroke();
+      }
     }
 
     ctx.rect(
