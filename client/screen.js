@@ -1,114 +1,154 @@
 (function() {
   var container = document.getElementById('container');
-  var scene = new THREE.Scene();
+  var ctx = container.getContext('2d');
 
   var width = window.innerWidth;
   var height = window.innerHeight;
 
-  var camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
-  var renderer = new THREE.WebGLRenderer();
+  container.width = width;
+  container.height = height;
 
-  renderer.setSize( window.innerWidth, window.innerHeight );
-  container.appendChild(renderer.domElement);
+  //ratio = 4 : 3;
 
-  function createCube(x, y, z, w, h, d, color)
+  var unit = {};
+  unit.x = width / 200;
+  unit.y = height / 150;
+
+  window.addEventListener('resize', function()
   {
-    var geometry = new THREE.BoxGeometry(w, h, d);
-    var material = new THREE.MeshBasicMaterial( { color: color } );
-    var cube = new THREE.Mesh( geometry, material );
-    cube.position.x = x;
-    cube.position.y = y;
-    cube.position.z = z;
-    scene.add( cube );
-  }
+    //update
+    width = window.innerWidth;
+    height = window.innerHeight;
 
-  //head
-  createCube(0, 18, 0, 4, 4, 4, 0x1abc9c);
-  //arms
-  createCube(-3, 12, 0, 2, 8, 2, 0x3498db);
-  createCube(3, 12, 0, 2, 8, 2, 0x9b59b6);
-  //torso
-  createCube(0, 12, 0, 4, 8, 2, 0x34495e);
-  //legs
-  createCube(-1, 4, 0, 2, 8, 2, 0xe74c3c);
-  createCube(1, 4, 0, 2, 8, 2, 0xe67e22);
+    //update
+    container.width = width;
+    container.height = height;
 
-  //comparision cubes
-  createCube(0, 0, 0, 10, 0, 10, 0xf1c40f);
-  createCube(10, 0, 0, 10, 0, 10, 0xef0123);
-  createCube(10, 10, 0, 10, 0, 10, 0xef0123);
-  createCube(10, 20, 0, 10, 0, 10, 0xef0123);
+    //update
+    unit.x = width / 200;
+    unit.y = height / 150;
+  });
 
-  camera.position.z = 22.5;
-  camera.position.y = 25;
-  camera.rotation.x = -0.25;
+  //character
+
+  var character = {};
+  character.position = {};
+  character.position.x = 10;
+  character.position.y = 10;
+  character.position.w = 5;
+  character.position.h = 10;
+
+  //map
+
+  map = [
+    {
+      item:'wall',
+      x:0,
+      y:0,
+      w:100,
+      h:5
+    },
+    {
+      item:'wall',
+      x:0,
+      y:70,
+      w:100,
+      h:5
+    },
+    {
+      item:'wall',
+      x:0,
+      y:5,
+      w:5,
+      h:65
+    },
+    {
+      item:'wall',
+      x:95,
+      y:5,
+      w:5,
+      h:65
+    },
+  ];
+
+  //movement
 
   var kd = require('keydrown');
 
-  kd.Q.down(function()
-  {
-    camera.rotation.y = camera.rotation.y + 0.5;
-  });
-  kd.E.down(function()
-  {
-    camera.rotation.y = camera.rotation.y - 0.5;
-  });
   kd.W.down(function()
   {
-    camera.position.z = camera.position.z - 1;
+    testMove(character.position.x, character.position.y - 1);
   });
   kd.A.down(function()
   {
-    camera.position.x = camera.position.x - 1;
+    testMove(character.position.x - 1, character.position.y);
   });
   kd.S.down(function()
   {
-    camera.position.z = camera.position.z + 1;
+    testMove(character.position.x, character.position.y + 1);
   });
   kd.D.down(function()
   {
-    camera.position.x = camera.position.x + 1;
+    testMove(character.position.x + 1, character.position.y);
   });
-  kd.SPACE.down(function()
-  {
-    camera.position.y = camera.position.y + 1;
-  });
-  kd.SHIFT.down(function()
-  {
-    camera.position.y = camera.position.y - 1;
-  });
+
   kd.run(function()
   {
     kd.tick();
   });
 
-  console.log(scene);
+  function testMove(inputX, inputY)
+  {
+    collision = false;
+
+    for(i in map)
+    {
+      if(
+        inputX < map[i].x + map[i].w &&
+        inputX + character.position.w > map[i].x &&
+        inputY < map[i].y + map[i].h &&
+        inputY + character.position.h > map[i].y
+      )
+      {
+        collision = true;
+        break;
+      }
+    }
+
+    if(!collision)
+    {
+      character.position.x = inputX;
+      character.position.y = inputY;
+    }
+  }
+
+  //map rendering
 
   function render()
   {
-    if(width != window.innerWidth || height != window.innerHeight)
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.beginPath();
+
+    for(i in map)
     {
-      width = window.innerWidth;
-      height = window.innerHeight;
-
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-
-      renderer.setSize(width, height);
+      ctx.rect(
+        (width / 2) - (character.position.w / 2) - (unit.x * character.position.x) + (unit.x * map[i].x) + 0.5,
+        (height / 2) - (character.position.h / 2) - (unit.y * character.position.y) + (unit.y * map[i].y) + 0.5,
+        (unit.x * map[i].w),
+        (unit.y * map[i].h)
+      );
+      ctx.stroke();
     }
 
-    scene.children[1].rotation.x = 1;
-    scene.children[2].rotation.x = 1;
-
-  	requestAnimationFrame(render);
-
-  	renderer.render(scene, camera);
+    ctx.rect(
+      (width / 2) - (character.position.w / 2) + 0.5,
+      (height / 2) - (character.position.h / 2) + 0.5,
+      (unit.x * character.position.w),
+      (unit.y * character.position.h)
+    );
+    ctx.stroke();
   }
 
-  setInterval(function physics()
-  {
-
-  }, 1000 / 60);
-
-  render();
+  window.setInterval(render, 1000 / 60);
 })();
