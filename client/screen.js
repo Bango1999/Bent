@@ -1,234 +1,109 @@
 (function() {
-  var container = document.getElementById('container');
-  var ctx = container.getContext('2d');
+  var canvas = document.getElementById('container');
+  var THREE = require('THREE');
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 100);
+  var renderer = new THREE.WebGLRenderer({canvas: canvas});
 
-  var width = window.innerWidth;
-  var height = window.innerHeight;
+  renderer.setClearColor(0x2c3e50);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.shadowMapEnabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  container.width = width;
-  container.height = height;
+  var cube = new THREE.BoxGeometry(1, 1, 1);
+  var material = new THREE.MeshLambertMaterial({color: 0xffffff});
+  var character = new THREE.Mesh(cube, material);
+  character.position = {x:0,y:0,z:0};
+  character.castShadow = true;
 
-  //ratio = 4 : 3;
+  scene.add(character);
+  camera.position.z = 7;
+  character.add(camera);
 
-  var scale = {};
-  scale.x = 200;
-  scale.y = 150;
+  // var grid = new THREE.GridHelper(10, 10);
+  // grid.rotation.x = Math.PI / 2;
+  // scene.add(grid);
 
-  var unit = {};
-  unit.x = width / scale.x;
-  unit.y = height / scale.y;
-
-  window.addEventListener('resize', function()
+  for(x=-5;x<=5;x++)
   {
-    //update
-    width = window.innerWidth;
-    height = window.innerHeight;
-
-    //update
-    container.width = width;
-    container.height = height;
-
-    //update
-    unit.x = width / scale.x;
-    unit.y = height / scale.y;
-  });
-
-  //character
-
-  var character = {};
-  character.position = {};
-  character.position.x = 10;
-  character.position.y = 10;
-  character.position.w = 5;
-  character.position.h = 5;
-  character.stat = {};
-  character.stat.health = 200;
-  character.stat.maxHealth = 200;
-
-  //map
-
-  map = [
+    for(y=-5;y<=5;y++)
     {
-      nid:'wall#1',
-      x:0,
-      y:0,
-      w:100,
-      h:5
-    },
-    {
-      nid:'wall#1',
-      x:0,
-      y:70,
-      w:100,
-      h:5
-    },
-    {
-      nid:'wall#1',
-      x:0,
-      y:5,
-      w:5,
-      h:65
-    },
-    {
-      nid:'npc#1',
-      x:50,
-      y:50,
-      w:5,
-      h:5
+      if(x==-5 || x==5 || y==-5 || y==5)
+      {
+        wall = new THREE.Mesh(cube, new THREE.MeshLambertMaterial({color: 0xffffff}));
+
+        wall.position.x = x;
+        wall.position.y = y;
+        wall.receiveShadow = true;
+
+        scene.add(wall);
+      }
     }
-  ];
+  }
 
-  style = [
-    {
-      nid:'wall#1',
-      innerColor:'#000',
-      outerColor:'#000',
-      type:'fillRect'
-    },
-    {
-      nid:'npc#1',
-      innerColor:'#fff',
-      outerColor:'#000',
-      type:'strokeRect'
-    }
-  ];
+  floor = new THREE.BoxGeometry(9, 9, 1);
+  floorMaterial = new THREE.MeshLambertMaterial({color: 0xe67e22});
+  floorMesh = new THREE.Mesh(floor, floorMaterial);
+  floorMesh.receiveShadow = true;
+  floorMesh.position.z = -1;
+  scene.add(floorMesh);
 
-  //movement
+  light = new THREE.PointLight(0xffee88, 1.5, 10);
+  light.position.set(0, 0, 1);
+  light.castShadow = true;
+  light.shadowDarkness = 0.25;
+  scene.add(light);
+
+  light = new THREE.AmbientLight(0x404040);
+  scene.add(light);
+
+  function render()
+  {
+  	requestAnimationFrame(render);
+  	renderer.render(scene, camera);
+  }
+
+  render();
 
   var kd = require('keydrown');
 
+  var moveSpeed = 0.075;
+
+  kd.Q.down(function()
+  {
+    character.rotation.z += moveSpeed / 2;
+  });
   kd.W.down(function()
   {
-    testMove(character.position.x, character.position.y - 1);
+    character.translateY(moveSpeed);
+  });
+  kd.E.down(function()
+  {
+    character.rotation.z -= moveSpeed / 2;
   });
   kd.A.down(function()
   {
-    testMove(character.position.x - 1, character.position.y);
+    character.translateX(-moveSpeed);
   });
   kd.S.down(function()
   {
-    testMove(character.position.x, character.position.y + 1);
+    character.translateY(-moveSpeed);
   });
   kd.D.down(function()
   {
-    testMove(character.position.x + 1, character.position.y);
+    character.translateX(moveSpeed);
   });
-
+  kd.SHIFT.down(function()
+  {
+    moveSpeed = 0.125;
+  });
+  kd.SHIFT.up(function()
+  {
+    moveSpeed = 0.1;
+  });
   kd.run(function()
   {
     kd.tick();
   });
-
-  container.addEventListener('click', function(event)
-  {
-    mcx = event.clientX;
-    mcy = event.clientY;
-    console.log(mcx, mcy);
-  });
-
-  function findStyle(mapObject)
-  {
-    for(i in style)
-    {
-      if(mapObject.nid == style[i].nid)
-      {
-        return style[i];
-      }
-    }
-  }
-
-  function testMove(inputX, inputY)
-  {
-    collision = false;
-
-    for(i in map)
-    {
-      if(
-        inputX < map[i].x + map[i].w &&
-        inputX + character.position.w > map[i].x &&
-        inputY < map[i].y + map[i].h &&
-        inputY + character.position.h > map[i].y
-      )
-      {
-        collision = true;
-        break;
-      }
-    }
-
-    if(!collision)
-    {
-      character.position.x = inputX;
-      character.position.y = inputY;
-    }
-  }
-
-  //map rendering
-
-  function render()
-  {
-    ctx.clearRect(0, 0, width, height);
-
-    //render map
-
-    for(i in map)
-    {
-      //canvas
-      cx = 0;
-      cy = 0;
-      cw = width;
-      ch = height;
-
-      //map item
-      dx = (width / 2) - (character.position.w / 2) - (unit.x * character.position.x) + (unit.x * map[i].x) + 0.5;
-      dy = (height / 2) - (character.position.h / 2) - (unit.y * character.position.y) + (unit.y * map[i].y) + 0.5;
-      dw = (unit.x * map[i].w);
-      dh = (unit.y * map[i].h);
-
-      //if map item is inside canvas, render it
-      if(cx < dx + dw && cx + cw > dx && cy < dy + dh && cy + ch > dy)
-      {
-        setStyle = findStyle(map[i]);
-
-        if(setStyle == undefined)
-        {
-          console.log('could not find a set style for ' + map[i].name)
-        }
-        else
-        {
-          if(setStyle.hasOwnProperty('innerColor'))
-          {
-            ctx.fillStyle = setStyle.innerColor;
-          }
-
-          if(setStyle.hasOwnProperty('outerColor'))
-          {
-            ctx.strokeStyle = setStyle.outerColor;
-          }
-
-          if(setStyle.hasOwnProperty('type'))
-          {
-            if(setStyle.type == 'fillRect')
-            {
-              ctx.fillRect(dx, dy, dw, dh);
-            }
-            else if(setStyle.type == 'strokeRect')
-            {
-              ctx.strokeRect(dx, dy, dw, dh);
-            }
-          }
-        }
-      }
-    }
-
-    //render character
-
-    ctx.strokeRect(
-      (width / 2) - (character.position.w / 2) + 0.5,
-      (height / 2) - (character.position.h / 2) + 0.5,
-      (unit.x * character.position.w),
-      (unit.y * character.position.h)
-    );
-  }
-
-  window.setInterval(render, 1000 / 60);
 })();
