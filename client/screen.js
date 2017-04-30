@@ -3,7 +3,10 @@
   var THREE = require('THREE');
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 100);
-  var renderer = new THREE.WebGLRenderer({canvas: canvas});
+  var renderer = new THREE.WebGLRenderer({
+    canvas : canvas,
+    antialias : true
+  });
 
   renderer.setClearColor(0x2c3e50);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -16,52 +19,92 @@
   var character = new THREE.Mesh(cube, material);
   character.position = {x:0,y:0,z:0};
   character.castShadow = true;
+  character.receiveShadow = true;
 
   scene.add(character);
-  camera.position.z = 7;
+  camera.position.z = 5;
   character.add(camera);
 
-  var grid = new THREE.GridHelper(10, 10);
-  grid.rotation.x = Math.PI / 2;
-  grid.position.z = -0.49;
-  scene.add(grid);
+  // var grid = new THREE.GridHelper(10, 10);
+  // grid.rotation.x = Math.PI / 2;
+  // grid.position.z = -0.49;
+  // scene.add(grid);
 
-  var map = [
-    {x:0,y:5,z:0,w:11,h:1,d:1},
-    {x:5,y:0,z:0,w:1,h:11,d:1},
-    {x:0,y:-5,z:0,w:11,h:1,d:1},
-    {x:-5,y:0,z:0,w:1,h:11,d:1},
-  ];
+  var fs = require('fs');
+  var map = JSON.parse(fs.readFileSync('./map.json', 'utf8'));
 
   for(z in map)
   {
+    //defaults
+    color = "0xffffff";
+    receiveShadow = true;
+    castShadow = true;
+
+    if(map[z].hasOwnProperty('size'))
+    {
+      geometry = new THREE.BoxGeometry(
+        map[z].size.w,
+        map[z].size.h,
+        map[z].size.d
+      );
+    }
+    else
+    {
+      throw new Error("Size is not defined for map obect " + z);
+    }
+
+    if(map[z].hasOwnProperty('options'))
+    {
+      if(map[z].options.hasOwnProperty('color'))
+      {
+        color = map[z].options.color;
+      }
+      else
+      {
+        console.log('color not specificed for map object ' + z);
+      }
+
+      if(map[z].options.hasOwnProperty('receiveShadow'))
+      {
+        receiveShadow = map[z].options.receiveShadow;
+      }
+      else
+      {
+        console.log('receiveShadow not specificed for map object ' + z);
+      }
+
+      if(map[z].options.hasOwnProperty('castShadow'))
+      {
+        castShadow = map[z].options.castShadow;
+      }
+      else
+      {
+        console.log('castShadow not specificed for map object ' + z);
+      }
+    }
+
     temp = new THREE.Mesh(
-      new THREE.BoxGeometry(map[z].w, map[z].h, map[z].d),
-      new THREE.MeshLambertMaterial({color: 0xffffff})
+      geometry,
+      new THREE.MeshLambertMaterial({color: color})
     );
 
-    temp.position.set(map[z].x, map[z].y, map[z].z);
-    temp.receiveShadow = true;
+    if(map[z].hasOwnProperty('position'))
+    {
+      temp.position.set(
+        map[z].position.x,
+        map[z].position.y,
+        map[z].position.z
+      );
+    }
+    else
+    {
+      throw new Error("Position is not defined for map obect " + z);
+    }
+
+    temp.castShadow = castShadow;
+    temp.receiveShadow = receiveShadow;
     scene.add(temp);
   }
-
-  // //demo map
-  // for(x=-5;x<=5;x++)
-  // {
-  //   for(y=-5;y<=5;y++)
-  //   {
-  //     if(x==-5 || x==5 || y==-5 || y==5)
-  //     {
-  //       wall = new THREE.Mesh(cube, new THREE.MeshLambertMaterial({color: 0xffffff}));
-  //
-  //       wall.position.x = x;
-  //       wall.position.y = y;
-  //       wall.receiveShadow = true;
-  //
-  //       scene.add(wall);
-  //     }
-  //   }
-  // }
 
   floor = new THREE.BoxGeometry(9, 9, 1);
   floorMaterial = new THREE.MeshLambertMaterial({color: 0xe67e22});
@@ -74,6 +117,9 @@
   light.position.set(0, 0, 1);
   light.castShadow = true;
   scene.add(light);
+
+  helper = new THREE.PointLightHelper( light );
+  scene.add( helper );
 
   light = new THREE.AmbientLight(0x404040);
   scene.add(light);
@@ -92,48 +138,108 @@
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-
-    console.log(character);
   });
 
   var kd = require('keydrown');
 
-  var moveSpeed = 0.075;
+  var moveSpeed = 0.05;
+  var rotateSpeed = Math.PI / 100;
+  var movePercision = 3;
 
   kd.Q.down(function()
   {
-    character.rotateZ(moveSpeed / 2);
+    if(testMove('rz', rotateSpeed))
+      character.rotateZ(rotateSpeed);
   });
   kd.W.down(function()
   {
-    character.translateY(moveSpeed);
+    if(testMove('y', moveSpeed))
+      character.translateY(moveSpeed);
   });
   kd.E.down(function()
   {
-    character.rotateZ(-moveSpeed / 2);
+    if(testMove('rz', -rotateSpeed))
+      character.rotateZ(-rotateSpeed);
   });
   kd.A.down(function()
   {
-    character.translateX(-moveSpeed);
+    if(testMove('x', -moveSpeed))
+      character.translateX(-moveSpeed);
   });
   kd.S.down(function()
   {
-    character.translateY(-moveSpeed);
+    if(testMove('y', -moveSpeed))
+      character.translateY(-moveSpeed);
   });
   kd.D.down(function()
   {
-    character.translateX(moveSpeed);
+    if(testMove('x', moveSpeed))
+      character.translateX(moveSpeed);
   });
   kd.SHIFT.down(function()
   {
-    moveSpeed = 0.125;
+    moveSpeed = 0.1;
   });
   kd.SHIFT.up(function()
   {
-    moveSpeed = 0.1;
+    moveSpeed = 0.05;
   });
   kd.run(function()
   {
     kd.tick();
   });
+
+  function testMove(axis, moveSpeed)
+  {
+    cr = character.rotation.z;
+
+    if(axis == 'rz')
+      cr = cr + moveSpeed;
+
+    x = character.position.x;
+    y = character.position.y;
+
+    if(axis == 'x')
+      x = character.position.x + moveSpeed;
+    if(axis == 'y')
+      y = character.position.y + moveSpeed;
+
+    cw = character.scale.x;
+    ch = character.scale.y;
+
+    cx = x;
+    cy = y;
+
+    cx = cx - character.position.x;
+    cy = cy - character.position.y;
+
+    cx = (cx * Math.cos(cr)) - (cy * Math.sin(cr));
+    cy = (cx * Math.sin(cr)) + (cy * Math.cos(cr));
+
+    cx = cx + character.position.x;
+    cy = cy + character.position.y;
+
+    cx = x - (cw / 2);
+    cy = y - (ch / 2);
+
+    //innocent until proven guilty
+    for(z in map)
+    {
+      mw = map[z].size.w;
+      mh = map[z].size.h;
+      mx = map[z].position.x - (mw / 2);
+      my = map[z].position.y - (mh / 2);
+
+      if(cx < mx + mw && cx + cw > mx && cy < my + mh && cy + ch > my)
+        return false;
+    }
+
+    if(axis == 'rz')
+      enableResetOrientation = true;
+
+    character.position.x = parseFloat(character.position.x.toFixed(movePercision));
+    character.position.y = parseFloat(character.position.y.toFixed(movePercision));
+
+    return true;
+  }
 })();
