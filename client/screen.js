@@ -155,7 +155,7 @@
           }
           else
           {
-            facing = 4;
+            facing = 3;
           }
         }
       }
@@ -244,26 +244,11 @@
       enableRotate++;
   });
 
-  kd.W.down(function()
-  {
-    if(testMove('y', moveSpeed))
-      character.translateY(moveSpeed);
-  });
-  kd.A.down(function()
-  {
-    if(testMove('x', -moveSpeed))
-      character.translateX(-moveSpeed);
-  });
-  kd.S.down(function()
-  {
-    if(testMove('y', -moveSpeed))
-      character.translateY(-moveSpeed);
-  });
-  kd.D.down(function()
-  {
-    if(testMove('x', moveSpeed))
-      character.translateX(moveSpeed);
-  });
+  kd.W.down(function(){move('W');});
+  kd.A.down(function(){move('A');});
+  kd.S.down(function(){move('S');});
+  kd.D.down(function(){move('D');});
+
   kd.SHIFT.down(function()
   {
     moveSpeed = 0.1;
@@ -277,58 +262,60 @@
     kd.tick();
   });
 
-  function testMove(axis, moveSpeed)
+  function move(moveDirection)
   {
     if(enableMovement)
     {
-      cr = character.rotation.z;
+      x = parseFloat(character.position.x.toFixed(movePercision));
+      y = parseFloat(character.position.y.toFixed(movePercision));
 
-      if(axis == 'rz')
-        cr = cr + moveSpeed;
-
-      character.position.x = parseFloat(character.position.x.toFixed(movePercision));
-      character.position.y = parseFloat(character.position.y.toFixed(movePercision));
-
-      x = character.position.x;
-      y = character.position.y;
-
-      if(axis == 'x')
+      if(facing == 0)
       {
-        if(facing == 0 || facing == 2)
-          x = character.position.x + moveSpeed;
-        else
-          y = character.position.y + moveSpeed;
+        if(moveDirection == 'W')
+          y += moveSpeed;
+        else if(moveDirection == 'A')
+          x -= moveSpeed;
+        else if(moveDirection == 'S')
+          y -= moveSpeed;
+        else if(moveDirection == 'D')
+          x += moveSpeed;
       }
-      else if (axis == 'y')
+      else if(facing == 1)
       {
-        if(facing == 0 || facing == 2)
-          y = character.position.y + moveSpeed;
-        else
-          x = character.position.x + moveSpeed;
+        if(moveDirection == 'W')
+          x += moveSpeed;
+        else if(moveDirection == 'A')
+          y += moveSpeed;
+        else if(moveDirection == 'S')
+          x -= moveSpeed;
+        else if(moveDirection == 'D')
+          y -= moveSpeed;
       }
-
-      if(axis == 'x' && (facing == 'N' || facing == 'S'))
-      if(axis == 'y' && (facing == 'E' || facing == 'W'))
-
-      x = parseFloat(x.toFixed(movePercision));
-      y = parseFloat(y.toFixed(movePercision));
-
-      console.log(x, y);
+      else if(facing == 2)
+      {
+        if(moveDirection == 'W')
+          y -= moveSpeed;
+        else if(moveDirection == 'A')
+          x += moveSpeed;
+        else if(moveDirection == 'S')
+          y += moveSpeed;
+        else if(moveDirection == 'D')
+          x -= moveSpeed;
+      }
+      else if(facing == 3)
+      {
+        if(moveDirection == 'W')
+          x -= moveSpeed;
+        else if(moveDirection == 'A')
+          y -= moveSpeed;
+        else if(moveDirection == 'S')
+          x += moveSpeed;
+        else if(moveDirection == 'D')
+          y += moveSpeed;
+      }
 
       cw = character.scale.x;
       ch = character.scale.y;
-
-      cx = x;
-      cy = y;
-
-      cx = cx - character.position.x;
-      cy = cy - character.position.y;
-
-      // cx = (cx * Math.cos(cr)) - (cy * Math.sin(cr));
-      // cy = (cx * Math.sin(cr)) + (cy * Math.cos(cr));
-
-      cx = cx + character.position.x;
-      cy = cy + character.position.y;
 
       cx = x - (cw / 2);
       cy = y - (ch / 2);
@@ -345,13 +332,11 @@
           return false;
       }
 
-      if(axis == 'rz')
-        enableResetOrientation = true;
+      cx += (cw / 2);
+      cy += (ch / 2);
 
-      character.position.x = parseFloat(character.position.x.toFixed(movePercision));
-      character.position.y = parseFloat(character.position.y.toFixed(movePercision));
-
-      return true;
+      character.position.x = parseFloat(cx.toFixed(movePercision));
+      character.position.y = parseFloat(cy.toFixed(movePercision));
     }
     else
     {
