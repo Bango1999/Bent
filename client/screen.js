@@ -127,6 +127,69 @@
   function render()
   {
   	requestAnimationFrame(render);
+
+    if(enableRotate == 0 || enableRotate == 1)
+    {
+      if(rotationDirection == 'CCW')
+      {
+        if(rotationStep < 15)
+        {
+          character.rotateZ(rotateSpeed);
+          rotationStep++;
+        }
+        else
+        {
+          rotationStep = 0;
+          enableRotate++;
+
+          degrees = Math.round(character.rotation.z * (180 / Math.PI));
+          character.rotation.z = degrees * (Math.PI / 180);
+
+          console.log(degrees, character.position.x, character.position.y);
+
+          enableMovement = true;
+
+          if(facing - 1 >= 0)
+          {
+            facing--;
+          }
+          else
+          {
+            facing = 4;
+          }
+        }
+      }
+      else if(rotationDirection == 'CW')
+      {
+        if(rotationStep < 15)
+        {
+          character.rotateZ(-rotateSpeed);
+          rotationStep++;
+        }
+        else
+        {
+          rotationStep = 0;
+          enableRotate++;
+
+          degrees = Math.round(character.rotation.z * (180 / Math.PI));
+          character.rotation.z = degrees * (Math.PI / 180);
+
+          console.log(degrees, character.position.x, character.position.y);
+
+          enableMovement = true;
+
+          if(facing + 1 < faces.length)
+          {
+            facing++;
+          }
+          else
+          {
+            facing = 0;
+          }
+        }
+      }
+    }
+
   	renderer.render(scene, camera);
   }
 
@@ -143,23 +206,48 @@
   var kd = require('keydrown');
 
   var moveSpeed = 0.05;
-  var rotateSpeed = Math.PI / 100;
-  var movePercision = 3;
+  var rotateSpeed = Math.PI / 30;
+  var movePercision = 2;
+  var enableRotate = 2;
+  var rotationDirection = '';
+  var rotationStep = 0;
+  var facing = 0;
+  var faces = ['N', 'E', 'S', 'W'];
+  var enableMovement = true;
 
   kd.Q.down(function()
   {
-    if(testMove('rz', rotateSpeed))
-      character.rotateZ(rotateSpeed);
+    if(enableRotate == 2)
+    {
+      rotationDirection = 'CCW';
+      enableRotate = 0;
+      enableMovement = false;
+    }
   });
+  kd.Q.up(function()
+  {
+    if(enableRotate == 0)
+      enableRotate++;
+  });
+  kd.E.down(function()
+  {
+    if(enableRotate == 2)
+    {
+      rotationDirection = 'CW';
+      enableRotate = 0;
+      enableMovement = false;
+    }
+  });
+  kd.E.up(function()
+  {
+    if(enableRotate == 0)
+      enableRotate++;
+  });
+
   kd.W.down(function()
   {
     if(testMove('y', moveSpeed))
       character.translateY(moveSpeed);
-  });
-  kd.E.down(function()
-  {
-    if(testMove('rz', -rotateSpeed))
-      character.rotateZ(-rotateSpeed);
   });
   kd.A.down(function()
   {
@@ -191,55 +279,83 @@
 
   function testMove(axis, moveSpeed)
   {
-    cr = character.rotation.z;
-
-    if(axis == 'rz')
-      cr = cr + moveSpeed;
-
-    x = character.position.x;
-    y = character.position.y;
-
-    if(axis == 'x')
-      x = character.position.x + moveSpeed;
-    if(axis == 'y')
-      y = character.position.y + moveSpeed;
-
-    cw = character.scale.x;
-    ch = character.scale.y;
-
-    cx = x;
-    cy = y;
-
-    cx = cx - character.position.x;
-    cy = cy - character.position.y;
-
-    cx = (cx * Math.cos(cr)) - (cy * Math.sin(cr));
-    cy = (cx * Math.sin(cr)) + (cy * Math.cos(cr));
-
-    cx = cx + character.position.x;
-    cy = cy + character.position.y;
-
-    cx = x - (cw / 2);
-    cy = y - (ch / 2);
-
-    //innocent until proven guilty
-    for(z in map)
+    if(enableMovement)
     {
-      mw = map[z].size.w;
-      mh = map[z].size.h;
-      mx = map[z].position.x - (mw / 2);
-      my = map[z].position.y - (mh / 2);
+      cr = character.rotation.z;
 
-      if(cx < mx + mw && cx + cw > mx && cy < my + mh && cy + ch > my)
-        return false;
+      if(axis == 'rz')
+        cr = cr + moveSpeed;
+
+      character.position.x = parseFloat(character.position.x.toFixed(movePercision));
+      character.position.y = parseFloat(character.position.y.toFixed(movePercision));
+
+      x = character.position.x;
+      y = character.position.y;
+
+      if(axis == 'x')
+      {
+        if(facing == 0 || facing == 2)
+          x = character.position.x + moveSpeed;
+        else
+          y = character.position.y + moveSpeed;
+      }
+      else if (axis == 'y')
+      {
+        if(facing == 0 || facing == 2)
+          y = character.position.y + moveSpeed;
+        else
+          x = character.position.x + moveSpeed;
+      }
+
+      if(axis == 'x' && (facing == 'N' || facing == 'S'))
+      if(axis == 'y' && (facing == 'E' || facing == 'W'))
+
+      x = parseFloat(x.toFixed(movePercision));
+      y = parseFloat(y.toFixed(movePercision));
+
+      console.log(x, y);
+
+      cw = character.scale.x;
+      ch = character.scale.y;
+
+      cx = x;
+      cy = y;
+
+      cx = cx - character.position.x;
+      cy = cy - character.position.y;
+
+      // cx = (cx * Math.cos(cr)) - (cy * Math.sin(cr));
+      // cy = (cx * Math.sin(cr)) + (cy * Math.cos(cr));
+
+      cx = cx + character.position.x;
+      cy = cy + character.position.y;
+
+      cx = x - (cw / 2);
+      cy = y - (ch / 2);
+
+      //innocent until proven guilty
+      for(z in map)
+      {
+        mw = map[z].size.w;
+        mh = map[z].size.h;
+        mx = map[z].position.x - (mw / 2);
+        my = map[z].position.y - (mh / 2);
+
+        if(cx < mx + mw && cx + cw > mx && cy < my + mh && cy + ch > my)
+          return false;
+      }
+
+      if(axis == 'rz')
+        enableResetOrientation = true;
+
+      character.position.x = parseFloat(character.position.x.toFixed(movePercision));
+      character.position.y = parseFloat(character.position.y.toFixed(movePercision));
+
+      return true;
     }
-
-    if(axis == 'rz')
-      enableResetOrientation = true;
-
-    character.position.x = parseFloat(character.position.x.toFixed(movePercision));
-    character.position.y = parseFloat(character.position.y.toFixed(movePercision));
-
-    return true;
+    else
+    {
+      return false;
+    }
   }
 })();
