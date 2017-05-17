@@ -17,11 +17,15 @@ Client start
 ----
 
 navigate to root of repo
+```
 cd client
 npm install && npm start
+```
 
 Server start
 ----
 
 navigate to root of repo
+```
 php ./server/server.php
+```
